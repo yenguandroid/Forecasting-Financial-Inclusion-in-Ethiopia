@@ -7,7 +7,7 @@ dataset and modeled impact relationships.
 ## Project Status
 
 - [x] Task 1 — Data Exploration and Enrichment
-- [ ] Task 2 — (upcoming)
+- [x] Task 2 — Exploratory Data Analysis
 - [ ] Task 3 — (upcoming)
 
 ## Project Structure
@@ -59,4 +59,50 @@ Run the tests:
 pytest tests/ -v
 ```
 
+## Task 2 Summary
 
+`notebooks/task2_eda.ipynb` — full EDA covering all 7 required areas:
+
+1. **Dataset overview** — record/pillar/source/confidence breakdowns, a
+   temporal coverage heatmap (indicator x year), and identification of
+   9 of 20 indicators with 2 or fewer total observations.
+2. **Access analysis** — the account ownership trajectory (2014-2024) vs. the
+   2025 NFIS-II target, growth rates between Findex waves, the gender gap,
+   and a direct investigation of the 2021-2024 slowdown (+3pp despite 65M+
+   mobile money accounts opened).
+3. **Usage analysis** — mobile money penetration trend, the registered-vs-
+   active gap (quantified: ~66% of M-Pesa's registered users are 90-day
+   active), and P2P vs. ATM transaction volumes.
+4. **Infrastructure & enablers** — 4G coverage, internet penetration, and
+   Fayda digital ID enrollment trends, and a discussion of which could serve
+   as leading indicators ahead of the next (~3-year-cadence) Findex survey.
+5. **Event timeline** — all 14 cataloged events plotted and overlaid on the
+   ownership/mobile-money and P2P trend charts, with an honest assessment of
+   what can (and can't) be visually confirmed given the data's temporal
+   resolution.
+6. **Correlation analysis** — a deliberately-caveated approach given how
+   sparse most indicators are (a formal correlation matrix would be
+   statistically meaningless here), plus a full synthesis of the
+   `impact_links` table itself (which pillars/indicators are most targeted,
+   direction and evidence-basis breakdowns).
+7. **Key insights & data quality assessment** — 5 documented insights, each
+   with supporting evidence citations, plus a full data quality writeup
+   (coverage gaps, confidence composition, and a genuine data-entry bug found
+   and fixed during this analysis — see below).
+
+**A bug found and fixed along the way:** while building this notebook, a
+`TypeError` surfaced while loading the enriched dataset. Root cause: record
+`REC_0006` (a critical 2024 Findex account-ownership observation) has its
+`comparable_country` / `collected_by` / `collection_date` / `notes` columns
+shifted by one in the **original starter data** — `collection_date` contains
+free text instead of a date. `src/data_loader.py` was hardened to degrade
+individual bad date cells to a missing value instead of crashing the whole
+load, with a regression test guarding against it reappearing silently. The
+underlying measured value (49%, ACC_OWNERSHIP) was unaffected and used as-is.
+
+Figures are also exported to `reports/figures/` for use outside the notebook.
+
+Run the tests (schema validation + regression checks + EDA-finding guards):
+```bash
+pytest tests/ -v
+```
