@@ -64,8 +64,10 @@ pytest tests/ -v
 `notebooks/task2_eda.ipynb` — full EDA covering all 7 required areas:
 
 1. **Dataset overview** — record/pillar/source/confidence breakdowns, a
-   temporal coverage heatmap (indicator x year), and identification of
-   9 of 20 indicators with 2 or fewer total observations.
+   temporal coverage heatmap:  23 of 25 indicator_codes have 2 or fewer total observations — these cannot support any real trend analysis on their own and are better used as single reference points
+  (e.g., "as of mid-2025, X was Y") than as time series. Only 2 indicators (most notably
+  ACC_OWNERSHIP, with all 4 Findex survey waves) have enough observations to analyze
+  an actual trend rather than a single snapshot or a two-point before/after comparison.
 2. **Access analysis** — the account ownership trajectory (2014-2024) vs. the
    2025 NFIS-II target, growth rates between Findex waves, the gender gap,
    and a direct investigation of the 2021-2024 slowdown (+3pp despite 65M+
