@@ -103,3 +103,13 @@ def load_all_enriched(processed_dir: Path = PROCESSED_DIR, raw_dir: Path = RAW_D
     wb = processed_dir / "ethiopia_fi_unified_data_enriched.xlsx"
     ref = raw_dir / "reference_codes.xlsx"
     return load_main_data(wb), load_impact_links(wb), load_reference_codes(ref)
+
+
+def load_all_final(processed_dir: Path = PROCESSED_DIR, raw_dir: Path = RAW_DIR):
+    """Convenience loader returning (main_data, impact_links, reference_codes)
+    from the FINAL workbook produced by build_impact_refinements.py (Task 3
+    output), which adds the calibrated Telebirr -> ACC_MM_ACCOUNT link on top
+    of the Task 1 enrichment. This is what Task 3 impact modeling should use."""
+    wb = processed_dir / "ethiopia_fi_unified_data_final.xlsx"
+    ref = raw_dir / "reference_codes.xlsx"
+    return load_main_data(wb), load_impact_links(wb), load_reference_codes(ref)

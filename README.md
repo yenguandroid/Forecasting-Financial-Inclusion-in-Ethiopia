@@ -8,7 +8,7 @@ dataset and modeled impact relationships.
 
 - [x] Task 1 — Data Exploration and Enrichment
 - [x] Task 2 — Exploratory Data Analysis
-- [ ] Task 3 — (upcoming)
+- [x] Task 3 — Event Impact Modeling
 
 ## Project Structure
 
@@ -64,10 +64,7 @@ pytest tests/ -v
 `notebooks/task2_eda.ipynb` — full EDA covering all 7 required areas:
 
 1. **Dataset overview** — record/pillar/source/confidence breakdowns, a
-   temporal coverage heatmap:  23 of 25 indicator_codes have 2 or fewer total observations — these cannot support any real trend analysis on their own and are better used as single reference points
-  (e.g., "as of mid-2025, X was Y") than as time series. Only 2 indicators (most notably
-  ACC_OWNERSHIP, with all 4 Findex survey waves) have enough observations to analyze
-  an actual trend rather than a single snapshot or a two-point before/after comparison.
+   temporal coverage heatmap:  23 of 25 indicator_codes have 2 or fewer total observations — these cannot support any real trend analysis on their own and are better used as single reference points than as time series. Only 2 indicators (most notably ACC_OWNERSHIP, with all 4 Findex survey waves) have enough observations to analyze an actual trend rather than a single snapshot or a two-point before/after comparison.
 2. **Access analysis** — the account ownership trajectory (2014-2024) vs. the
    2025 NFIS-II target, growth rates between Findex waves, the gender gap,
    and a direct investigation of the 2021-2024 slowdown (+3pp despite 65M+
@@ -106,5 +103,50 @@ Figures are also exported to `reports/figures/` for use outside the notebook.
 
 Run the tests (schema validation + regression checks + EDA-finding guards):
 ```bash
+pytest tests/ -v
+```
+
+## Task 3 Summary
+
+`notebooks/task3_impact_modeling.ipynb` — translates `impact_links` records
+into a working predictive model:
+
+1. **Understand the impact data** — joins `impact_links` to events via
+   `parent_id`, summarizing which events affect which indicators and by how
+   much (2 links have no numeric estimate and are explicitly flagged rather
+   than guessed at).
+2. **Functional form** (`src/impact_model.py`) — each event's effect is a
+   "ramped step": zero until `lag_months` after the event, then a **linear
+   ramp** to its full estimated value over a `ramp_months` window (3/9/12
+   months depending on whether the relationship is `direct`/`indirect`/
+   `enabling`), held constant afterward. Multiple events combine additively.
+3. **Comparable-country evidence** — 4 links (Kenya x2, Tanzania, India)
+   reviewed and explicitly flagged as motivating, not validating, estimates.
+4. **Association matrix** — events x indicators, signed estimated effect in
+   each indicator's own unit. Exported to
+   `reports/event_indicator_association_matrix.csv` and as a heatmap figure.
+5. **Validation** — tested directly against the task's own example:
+   Telebirr (May 2021) and Mobile Money Account Rate (4.7% -> 9.45%,
+   2021-2024). The *original* linked data badly under-predicted this
+   (0% and 5.0% respectively) because **no link existed connecting Telebirr
+   to this indicator at all**.
+6. **Refinement** — added one new, data-calibrated link (`IMP_0021`):
+   trained on the 2021 checkpoint (+4.7pp), validated out-of-sample against
+   the 2024 checkpoint (predicts 9.7% vs. actual 9.45%, 0.25pp error).
+   Implemented in `build_impact_refinements.py`, producing
+   `data/processed/ethiopia_fi_unified_data_final.xlsx`.
+7. **Methodology, assumptions, and limitations** — fully documented in the
+   notebook's final section, including what would most improve the model.
+
+**Two real bugs found and fixed while building this** (both documented in
+the notebook and git history): a sign-flip error that double-negated
+`decrease`-direction links in the association matrix, and a color-scale
+distortion in the heatmap caused by one indicator's absolute-count units
+(1,000,000) swamping every percentage-point-scale cell.
+
+Run the pipeline in order:
+```bash
+python build_enrichment.py            # Task 1 output
+python build_impact_refinements.py    # Task 3 output (needs Task 1 output first)
 pytest tests/ -v
 ```
