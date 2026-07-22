@@ -9,6 +9,7 @@ dataset and modeled impact relationships.
 - [x] Task 1 — Data Exploration and Enrichment
 - [x] Task 2 — Exploratory Data Analysis
 - [x] Task 3 — Event Impact Modeling
+- [x] Task 4 — Forecasting Access and Usage (2025-2027)
 
 ## Project Structure
 
@@ -59,12 +60,14 @@ Run the tests:
 pytest tests/ -v
 ```
 
+
 ## Task 2 Summary
 
 `notebooks/task2_eda.ipynb` — full EDA covering all 7 required areas:
 
 1. **Dataset overview** — record/pillar/source/confidence breakdowns, a
-   temporal coverage heatmap:  23 of 25 indicator_codes have 2 or fewer total observations — these cannot support any real trend analysis on their own and are better used as single reference points than as time series. Only 2 indicators (most notably ACC_OWNERSHIP, with all 4 Findex survey waves) have enough observations to analyze an actual trend rather than a single snapshot or a two-point before/after comparison.
+   temporal coverage heatmap (indicator x year), and identification of
+   9 of 20 indicators with 2 or fewer total observations.
 2. **Access analysis** — the account ownership trajectory (2014-2024) vs. the
    2025 NFIS-II target, growth rates between Findex waves, the gender gap,
    and a direct investigation of the 2021-2024 slowdown (+3pp despite 65M+
@@ -148,5 +151,52 @@ Run the pipeline in order:
 ```bash
 python build_enrichment.py            # Task 1 output
 python build_impact_refinements.py    # Task 3 output (needs Task 1 output first)
+pytest tests/ -v
+```
+
+## Task 4 Summary
+
+`notebooks/task4_forecasting.ipynb` — forecasts both targets through 2027:
+
+1. **Define targets** — Account Ownership Rate (Access, 4 real Findex
+   points) and Digital Payment Usage (Usage). Corrected a target mix-up
+   before forecasting anything: the existing `ACC_MM_ACCOUNT` indicator is
+   NOT the same as Findex's "Digital Payment Usage" — researched and added
+   the real, correctly-defined Usage figures instead (`build_task4_targets.py`,
+   `data_enrichment_log_task4.md`). Also confirmed via research that
+   Ethiopia has 4 real Findex points (2014-2024), not 5 (2011-2024) as the
+   task brief's framing suggested — Ethiopia joined Findex in 2014.
+2. **Select approach** — trend regression (linear AND log, compared
+   directly), an event-augmented model reusing Task 3's `src/impact_model.py`
+   (adding only the *incremental*, not-yet-realized portion of an event's
+   effect to avoid double-counting), and scenario analysis.
+3. **Generate forecasts** — baseline trend, with-events, and
+   optimistic/base/pessimistic scenarios for 2025-2027, for both targets.
+4. **Quantify uncertainty** — real OLS 95% prediction intervals for Access
+   (n=4, flagged as wide/indicative given so few points); for Usage (n=2,
+   zero residual degrees of freedom), an honest scenario range built from
+   explicit stated growth-rate assumptions instead of a fabricated
+   statistical interval (confirmed via test that statsmodels correctly
+   returns NaN here rather than a misleadingly narrow interval).
+5. **Interpret results** — the log trend (not linear) is used as the
+   baseline, since linear extrapolation ignores Access's well-documented
+   deceleration; the Fayda Digital ID rollout is identified as the single
+   largest lever for Access in this window (its long lag means its full
+   effect lands almost entirely in 2026); Usage is forecast essentially
+   flat across every scenario through 2027.
+
+Headline forecast (base scenario): **Access ~50% (2025) → ~61% (2026-2027)**,
+missing the NFIS-II's 70%-by-2025 target under all but the most optimistic
+assumptions; **Usage ~21-22%** through 2027, essentially unchanged from 2024.
+
+New module: `src/forecasting.py` (trend fitting with prediction intervals,
+incremental event-effect calculation, both scenario-building functions) —
+14 new tests in `tests/test_forecasting.py`.
+
+Run the full pipeline in order:
+```bash
+python build_enrichment.py            # Task 1 output
+python build_impact_refinements.py    # Task 3 output
+python build_task4_targets.py         # Task 4 output
 pytest tests/ -v
 ```

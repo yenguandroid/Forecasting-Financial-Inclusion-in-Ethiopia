@@ -113,3 +113,14 @@ def load_all_final(processed_dir: Path = PROCESSED_DIR, raw_dir: Path = RAW_DIR)
     wb = processed_dir / "ethiopia_fi_unified_data_final.xlsx"
     ref = raw_dir / "reference_codes.xlsx"
     return load_main_data(wb), load_impact_links(wb), load_reference_codes(ref)
+
+
+def load_all_task4(processed_dir: Path = PROCESSED_DIR, raw_dir: Path = RAW_DIR):
+    """Convenience loader returning (main_data, impact_links, reference_codes)
+    from the TASK 4 workbook produced by build_task4_targets.py, which adds
+    the real, Findex-defined Digital Payment Usage observations (distinct
+    from ACC_MM_ACCOUNT) on top of the Task 3 final dataset. This is what
+    Task 4 forecasting should use."""
+    wb = processed_dir / "ethiopia_fi_unified_data_task4.xlsx"
+    ref = raw_dir / "reference_codes.xlsx"
+    return load_main_data(wb), load_impact_links(wb), load_reference_codes(ref)
